@@ -7,6 +7,7 @@ Esta es una API de autenticación y registro desarrollada en Laravel 9 utilizand
 - Registro de usuarios.
 - Inicio de sesión de usuarios.
 - Obtener perfil de usuario autenticado.
+- Editar usuario
 - Cierre de sesión de usuario autenticado.
 - Listar todos los usuarios (requiere autenticación).
 - Eliminar usuario
