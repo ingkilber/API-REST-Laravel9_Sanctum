@@ -78,4 +78,37 @@ class AuthController extends Controller
         ]);
     }
 
+    // Eliminar usuarios
+    public function deleteUser(Request $request, $id)
+    {
+        // Verifica si el usuario autenticado es el "kilber@admin.com" o si el ID coincide
+        // (Solo el admin puede eliminar cualquier user y el user que se loguea en su propia cuenta puede eliminar unicamente su cuenta)
+
+        $currentUser = Auth::user();
+
+        if ($currentUser->email === 'kilber@admin.com' || $currentUser->id == $id) {
+            // Busca el usuario por su ID
+            $user = User::find($id);
+    
+            // Verifica si el usuario existe
+            if (!$user) {
+                return response(["message" => "El usuario no existe"], Response::HTTP_NOT_FOUND);
+            }
+    
+            // Elimina el usuario
+            $user->delete();
+    
+            // Cerrar la sesión del usuario si es el propio usuario autenticado
+            if ($currentUser->id == $id) {
+                Auth::logout();
+                $cookie = Cookie::forget('cookie_token');
+                return response(["message" => "Tu cuenta ha sido eliminada exitosamente"], Response::HTTP_OK)->withCookie($cookie);
+            }
+    
+            return response(["message" => "Usuario eliminado exitosamente"], Response::HTTP_OK);
+        } else {
+            return response(["message" => "No tienes permiso para eliminar este usuario"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
 }
