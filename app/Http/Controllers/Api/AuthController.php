@@ -8,11 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
+
+// ----------------------------- Registro ---------------------------------------------------
+
 {
-    // Registro
     public function register(Request $request)
     {
         //validación de los datos del registro
@@ -35,7 +38,8 @@ class AuthController extends Controller
         return response(["message" => "Registro exitoso", $user], Response::HTTP_CREATED);
     }
 
-    // Iniciar sesión
+// ----------------------------- Iniciar sesión ---------------------------------------------------
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -53,7 +57,8 @@ class AuthController extends Controller
         }
     }
 
-    // Perfil de usuario
+// ----------------------------------- Perfil de usuario ---------------------------------------------
+
     public function userProfile(Request $request)
     {
         return response()->json([
@@ -62,7 +67,8 @@ class AuthController extends Controller
         ], Response::HTTP_OK);
     }
 
-    // Cerrar sesión
+// ---------------------------------- Cerrar sesión ----------------------------------------------
+
     public function logout()
     {
         $cookie = Cookie::forget('cookie_token');
@@ -78,11 +84,60 @@ class AuthController extends Controller
         ]);
     }
 
-    // Eliminar usuarios
+    // --------------------------------- Editar o actualizar usuario -----------------------------------------------
+
+    public function editUser(Request $request, $id)
+    {
+        // Verifica si el usuario autenticado es el "kilber@admin.com" o si el ID coincide
+        // (Solo el admin puede editar todos user y el user que se loguea puede editar unicamente su cuenta)
+
+        $currentUser = Auth::user();
+
+        if ($currentUser->email === 'kilber@admin.com' || $currentUser->id == $id) {
+            // Busca el usuario por su ID
+            $user = User::find($id);
+
+            // Verifica si el usuario existe
+            if (!$user) {
+                return response(["message" => "El usuario no existe"], Response::HTTP_NOT_FOUND);
+            }
+
+            // Validación de los datos del formulario de edición
+            $request->validate([
+                'name' => 'sometimes', // Hace que el campo sea opcional
+                'email' => [
+                    'nullable', // Hace que el campo sea opcional
+                    'email',
+                    Rule::unique('users')->ignore($user->id),
+                ],
+                'password' => 'sometimes|confirmed',
+            ]);
+
+            // Actualiza los datos del usuario
+            $user->name = $request->input('name');
+        
+            if ($request->filled('email')) {
+                $user->email = $request->input('email');
+            }
+    
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->input('password'));
+            }
+
+            $user->save();
+
+            return response(["message" => "Usuario actualizado exitosamente"], Response::HTTP_OK);
+        } else {
+            return response(["message" => "No tienes permiso para editar este usuario"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
+// ---------------------------------- Eliminar usuarios ----------------------------------------------
+
     public function deleteUser(Request $request, $id)
     {
         // Verifica si el usuario autenticado es el "kilber@admin.com" o si el ID coincide
-        // (Solo el admin puede eliminar cualquier user y el user que se loguea en su propia cuenta puede eliminar unicamente su cuenta)
+        // (Solo el admin puede eliminar todos los user y el user que se loguea puede eliminar solo cuenta)
 
         $currentUser = Auth::user();
 
