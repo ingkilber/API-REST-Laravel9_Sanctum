@@ -49,9 +49,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-            $token = $user->createToken('token')->plainTextToken;
+            // Genera el token con información adicional (ID del usuario)
+            $token = $user->createToken('token', ['user_id' => $user->id])->plainTextToken;
             $cookie = cookie('cookie_token', $token, 60 * 24);
-            return response(["token" => $token, "message" => "Inicio sesión exitosamente"], Response::HTTP_OK)->withoutCookie($cookie);
+            return response(["token" => $token, "user_id" => $user->id, "message" => "Inicio sesión exitosamente"], Response::HTTP_OK)->withoutCookie($cookie);
         } else {
             return response(["message" => "Usuario o Contraseña inválidos"], Response::HTTP_UNAUTHORIZED);
         }
