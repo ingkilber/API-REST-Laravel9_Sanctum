@@ -1,4 +1,4 @@
-# API de Autenticación y Registro con Laravel 9 y Sanctum
+# API de Autenticación y Registro
 
 Esta es una API de autenticación y registro desarrollada en Laravel 9 utilizando el paquete Sanctum para la autenticación basada en tokens
 
